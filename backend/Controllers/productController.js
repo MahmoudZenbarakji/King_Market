@@ -2,8 +2,8 @@ const Product = require('../model/Product');
 
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate('category').exec();
-    res.status(200).json({ success: true, data: products });
+    const products = await Product.find().populate('category');
+    res.status(200).json({ message: 'the products has been fetched succsess', data: products });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
