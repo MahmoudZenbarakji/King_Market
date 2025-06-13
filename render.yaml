@@ -3,12 +3,12 @@ services:
     name: kingmarket
     env: node
     buildCommand: |
-      # install backend deps
-      npm install --prefix backend
-      # install frontend deps and build into backend/public per your Vite config
-      npm install --prefix frontend
-      npm run build --prefix frontend
-    startCommand: npm start --prefix backend
+      # install backend deps from src/backend
+      npm install --prefix src/backend
+      # install frontend deps & build from src/frontend
+      npm install --prefix src/frontend
+      npm run build --prefix src/frontend
+    startCommand: npm start --prefix src/backend
     envVars:
       - key: MONGODB_URI
         value: your_mongodb_atlas_uri
