@@ -32,7 +32,7 @@ useEffect(() => {
       setCategoriesLoading(true);
       console.log('Fetching categories from:', `${API_BASE}/api/categories`);
       
-      const response = await fetch(`${API_BASE}/api/categories`);
+      const response = await fetch(`/api/categories`);
       
       // Log response status and headers
       console.log('Response status:', response.status);
@@ -61,7 +61,7 @@ useEffect(() => {
       const fetchSubcategories = async () => {
         try {
           setSubcategoriesLoading(true);
-          const response = await fetch(`${API_BASE}/api/subcategories?category=${formData.category}`);
+          const response = await fetch(`/api/subcategories?category=${formData.category}`);
           
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -137,7 +137,7 @@ useEffect(() => {
     }
     
     try {
-      const response = await fetch(`${API_BASE}/api/categories`, {
+      const response = await fetch(`/api/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -175,7 +175,7 @@ useEffect(() => {
     }
     
     try {
-      const response = await fetch(`${API_BASE}/api/subcategories`, {
+      const response = await fetch(`/api/subcategories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -221,7 +221,7 @@ useEffect(() => {
       formDataToSend.append('images', image);
     });
     
-    const response = await fetch(`${API_BASE}/api/products`, {
+    const response = await fetch(`/api/products`, {
       method: 'POST',
       body: formDataToSend
     });

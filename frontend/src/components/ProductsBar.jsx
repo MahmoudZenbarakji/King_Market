@@ -29,7 +29,7 @@ const ProductsBar = () => {
       setError(null);
       
       // Fetch categories
-      const categoriesResponse = await fetch(`${API_BASE}/api/categories`);
+      const categoriesResponse = await fetch(`/api/categories`);
       if (!categoriesResponse.ok) {
         const text = await categoriesResponse.text();
         throw new Error(`Categories error (${categoriesResponse.status}): ${text}`);
@@ -38,7 +38,7 @@ const ProductsBar = () => {
       setCategories(categoriesData);
       
       // Fetch products
-      const productsResponse = await fetch(`${API_BASE}/api/products`);
+      const productsResponse = await fetch(`/api/products`);
       if (!productsResponse.ok) {
         const text = await productsResponse.text();
         throw new Error(`Products error (${productsResponse.status}): ${text}`);
