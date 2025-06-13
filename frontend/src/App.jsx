@@ -17,7 +17,7 @@ import DashboardHome from './pages/admin/DashboardHome';
 import AddProduct from './pages/admin/AddProduct';
 import ProductList from './pages/admin/ProductList';
 import './App.css';
-import './pages/pages.css';
+import './pages/Pages.css';
 import ProductDetail from './pages/ProductDetail';
 
 const ProtectedRoute = ({ children }) => {
