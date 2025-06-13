@@ -12,7 +12,7 @@ const ProductsBar = () => {
   const productsRef = useRef(null);
   
 
-    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+    const API_BASE = '/api';
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);

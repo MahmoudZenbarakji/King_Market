@@ -13,8 +13,9 @@ export default defineConfig(({ mode }) => {
       strictPort: true, // Don't try other ports
     },
     // Only expose necessary variables
-    define: {
-      'process.env.VITE_API_BASE': JSON.stringify(env.VITE_API_BASE)
-    }
-  };
+    base: '/', // Important for production
+  build: {
+    outDir: '../backend/public', // Build to backend public folder
+    emptyOutDir: true,
+  }} 
 });

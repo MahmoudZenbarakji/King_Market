@@ -10,7 +10,9 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+  
+  
+  const API_BASE = '/api';
 
   useEffect(() => {
     const fetchProduct = async () => {
