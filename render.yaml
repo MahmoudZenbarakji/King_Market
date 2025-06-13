@@ -2,17 +2,17 @@ services:
   - type: web
     name: kingmarket
     env: node
-    buildCommand: npm install && cd frontend && npm install && npm run build
-    startCommand: node backend/server.js
+    # run installs in backend *then* frontend, then build the frontend
+    buildCommand: |
+      npm install --prefix backend
+      npm install --prefix frontend
+      npm run build --prefix frontend
+    # start the backend (which will serve your built frontend)
+    startCommand: npm start --prefix backend
     envVars:
       - key: MONGODB_URI
         value: your_mongodb_atlas_uri
-      - key: CLOUDINARY_NAME
-        value: your_cloudinary_name
-      - key: CLOUDINARY_API_KEY
-        value: your_cloudinary_api_key
-      - key: CLOUDINARY_API_SECRET
-        value: your_cloudinary_api_secret
+      # …
       - key: PORT
         value: 10000
       - key: NODE_ENV
