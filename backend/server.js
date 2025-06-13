@@ -13,7 +13,9 @@ connectDB();
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://king-market-qhz7.vercel.app', 'https://king-market.vercel.app'] 
+    : 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -51,6 +53,17 @@ app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/subcategories', require('./routes/subcategoryRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 
+// Serve static frontend in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  const frontendPath = path.join(__dirname, 'public');
+  app.use(express.static(frontendPath));
+  
+  // Handle client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err.stack);

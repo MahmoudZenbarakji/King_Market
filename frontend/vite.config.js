@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     // Only expose necessary variables
     base: '/', // Important for production
   build: {
-    outDir: '../backend/public', // Build to backend public folder
+    outDir: 'dist', // Build to backend public folder
     emptyOutDir: true,
   }} 
 });
