@@ -2,17 +2,22 @@ services:
   - type: web
     name: kingmarket
     env: node
-    # run installs in backend *then* frontend, then build the frontend
     buildCommand: |
+      # install backend deps
       npm install --prefix backend
+      # install frontend deps and build into backend/public per your Vite config
       npm install --prefix frontend
       npm run build --prefix frontend
-    # start the backend (which will serve your built frontend)
     startCommand: npm start --prefix backend
     envVars:
       - key: MONGODB_URI
         value: your_mongodb_atlas_uri
-      # …
+      - key: CLOUDINARY_NAME
+        value: your_cloudinary_name
+      - key: CLOUDINARY_API_KEY
+        value: your_cloudinary_api_key
+      - key: CLOUDINARY_API_SECRET
+        value: your_cloudinary_api_secret
       - key: PORT
         value: 10000
       - key: NODE_ENV
