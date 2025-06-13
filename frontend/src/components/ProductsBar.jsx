@@ -12,7 +12,9 @@ const ProductsBar = () => {
   const productsRef = useRef(null);
   
 
-    const API_BASE = '/api';
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : 'http://localhost:5000';
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);

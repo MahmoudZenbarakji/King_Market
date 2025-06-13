@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './AddProduct.css';
 
-const API_BASE = '/api';
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : 'http://localhost:5000';
 
 const AddProduct = () => {
   // State initialization
@@ -30,7 +32,7 @@ useEffect(() => {
   const fetchCategories = async () => {
     try {
       setCategoriesLoading(true);
-      console.log('Fetching categories from:', `${API_BASE}/api/categories`);
+      console.log('Fetching categories from:', `/api/categories`);
       
       const response = await fetch(`/api/categories`);
       
