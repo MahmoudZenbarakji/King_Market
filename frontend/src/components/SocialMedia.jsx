@@ -108,7 +108,7 @@ const SocialMedia = () => {
     { 
       name: "facebook", 
       icon: <FaFacebookF className="social-icon" />,
-      url: "https://facebook.com/kingmarket",
+      url: "https://www.facebook.com/kingmarketusa",
       color: "#4CAF50"
     },
     { 

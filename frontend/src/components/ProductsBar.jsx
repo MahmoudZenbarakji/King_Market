@@ -4,7 +4,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Product from './Product';
 import './ProductsBar.css';
 
-// Register ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
 
 const ProductsBar = () => {
@@ -12,125 +11,168 @@ const ProductsBar = () => {
   const categoriesRef = useRef([]);
   const productsRef = useRef(null);
   
-  // Mock categories (in a real app, these would come from an API)
-  const categories = [
-    { id: 'meats', name: 'Meats', icon: '🥩' },
-    { id: 'canned', name: 'Canned Food', icon: '🥫' },
-    { id: 'produce', name: 'Fruits & Vegetables', icon: '🥦' },
-    { id: 'other', name: 'Other Items', icon: '📦' }
-  ];
-  
-  // Mock products data (in a real app, these would come from MongoDB)
-  const allProducts = [
-    { id: 1, name: 'Fresh Beef', price: 12.99, category: 'meats', image: 'beef.jpg' },
-    { id: 2, name: 'Organic Chicken', price: 8.99, category: 'meats', image: 'chicken.jpg' },
-    { id: 3, name: 'Canned Beans', price: 1.99, category: 'canned', image: 'beans.jpg' },
-    { id: 4, name: 'Canned Corn', price: 1.49, category: 'canned', image: 'corn.jpg' },
-    { id: 5, name: 'Fresh Apples', price: 2.99, category: 'produce', image: 'apples.jpg' },
-    { id: 6, name: 'Organic Carrots', price: 1.29, category: 'produce', image: 'carrots.jpg' },
-    { id: 7, name: 'Rice 5kg', price: 5.99, category: 'other', image: 'rice.jpg' },
-    { id: 8, name: 'Pasta Pack', price: 3.49, category: 'other', image: 'pasta.jpg' },
-  ];
-  
+
+    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [products, setProducts] = useState(allProducts);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch products and categories on component mount
   
-  // Filter products based on selected category
+    const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch categories
+      const categoriesResponse = await fetch(`${API_BASE}/api/categories`);
+      if (!categoriesResponse.ok) {
+        const text = await categoriesResponse.text();
+        throw new Error(`Categories error (${categoriesResponse.status}): ${text}`);
+      }
+      const categoriesData = await categoriesResponse.json();
+      setCategories(categoriesData);
+      
+      // Fetch products
+      const productsResponse = await fetch(`${API_BASE}/api/products`);
+      if (!productsResponse.ok) {
+        const text = await productsResponse.text();
+        throw new Error(`Products error (${productsResponse.status}): ${text}`);
+      }
+      const productsData = await productsResponse.json();
+      setAllProducts(productsData);
+      setProducts(productsData);
+      
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError('Failed to load products. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    
+    // Cleanup animation on unmount
+    return () => {
+      if (ScrollTrigger.getAll().length > 0) {
+        ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      }
+    };
+  }, []);
+
+  // Filter products by category
   useEffect(() => {
     if (selectedCategory) {
-      setLoading(true);
-      
-      // Simulate API call delay
-      setTimeout(() => {
-        const filtered = allProducts.filter(
-          product => product.category === selectedCategory
-        );
-        setProducts(filtered);
-        setLoading(false);
-      }, 800);
+      const filtered = allProducts.filter(
+        product => product.category && product.category._id === selectedCategory
+      );
+      setProducts(filtered);
     } else {
       setProducts(allProducts);
     }
-  }, [selectedCategory]);
-  
-  // Animation on scroll
+  }, [selectedCategory, allProducts]);
+
+  // Animation setup
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
+    if (loading || !sectionRef.current) return;
     
-    gsap.fromTo(section,
-      { opacity: 0, y: 100 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          toggleActions: "play none none none"
-        }
-      }
-    );
-    
-    // Animate categories
-    categoriesRef.current.forEach((category, i) => {
-      gsap.fromTo(category,
-        { opacity: 0, scale: 0.5 },
+    // Initialize GSAP animations only if not already initialized
+    if (categoriesRef.current.length > 0 && productsRef.current) {
+      // Category animations
+      categoriesRef.current.forEach((el, index) => {
+        gsap.fromTo(el, 
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            delay: index * 0.1,
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top bottom",
+              toggleActions: "play none none none"
+            }
+          }
+        );
+      });
+
+      // Product grid animation
+      gsap.fromTo(productsRef.current, 
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
-          scale: 1,
-          duration: 0.6,
-          delay: i * 0.1,
-          ease: "back.out(1.7)",
+          y: 0,
+          duration: 0.8,
           scrollTrigger: {
-            trigger: section,
-            start: "top 80%"
+            trigger: sectionRef.current,
+            start: "top bottom",
+            toggleActions: "play none none none"
           }
         }
       );
-    });
-    
-    // Animate products container
-    gsap.fromTo(productsRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        delay: 0.4,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%"
-        }
-      }
-    );
-  }, []);
-  
-  const toggleCategory = (categoryId) => {
-    if (selectedCategory === categoryId) {
-      setSelectedCategory(null); // Deselect if already selected
-    } else {
-      setSelectedCategory(categoryId);
     }
+  }, [loading]);
+
+  const toggleCategory = (categoryId) => {
+    setSelectedCategory(prev => prev === categoryId ? null : categoryId);
   };
-  
+
+  // Add passive: true to event listeners to fix warnings
+  useEffect(() => {
+    const addPassiveListeners = () => {
+      const elements = document.querySelectorAll('.category-circle');
+      elements.forEach(el => {
+        el.addEventListener('touchstart', () => {}, { passive: true });
+        el.addEventListener('touchmove', () => {}, { passive: true });
+      });
+    };
+
+    if (!loading) {
+      addPassiveListeners();
+    }
+    
+    return () => {
+      const elements = document.querySelectorAll('.category-circle');
+      elements.forEach(el => {
+        el.removeEventListener('touchstart', () => {});
+        el.removeEventListener('touchmove', () => {});
+      });
+    };
+  }, [loading]);
+
   return (
     <section ref={sectionRef} className="products-section">
       <div className="container">
         <h2 className="section-title">Our Products</h2>
         
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Retry</button>
+          </div>
+        )}
+        
         <div className="products-container">
           <div className="categories-sidebar">
             {categories.map((category, index) => (
               <div 
-                key={category.id}
-                ref={el => categoriesRef.current[index] = el}
-                className={`category-circle ${selectedCategory === category.id ? 'active' : ''}`}
-                onClick={() => toggleCategory(category.id)}
+                key={category._id}
+                ref={el => (categoriesRef.current[index] = el)}
+                className={`category-circle ${selectedCategory === category._id ? 'active' : ''}`}
+                onClick={() => toggleCategory(category._id)}
               >
-                <div className="category-icon">{category.icon}</div>
+                <div className="category-icon">
+                  {category.name === 'Meats' ? '🥩' : 
+                   category.name === 'Canned Food' ? '🥫' : 
+                   category.name === 'Fruits & Vegetables' ? '🥦' : '📦'}
+                </div>
                 <span className="category-name">{category.name}</span>
               </div>
             ))}
@@ -142,10 +184,19 @@ const ProductsBar = () => {
                 <div className="spinner"></div>
                 <p>Loading products...</p>
               </div>
-            ) : (
+            ) : products.length > 0 ? (
               products.map(product => (
-                <Product key={product.id} product={product} />
+                <Product key={product._id} product={product} />
               ))
+            ) : (
+              <div className="no-products">
+                <p>No products found</p>
+                {allProducts.length > 0 && (
+                  <button onClick={() => setSelectedCategory(null)}>
+                    Show all products
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

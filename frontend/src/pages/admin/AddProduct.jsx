@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AddProduct.css';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+
 const AddProduct = () => {
-  const [categories, setCategories] = useState([
-    { id: 'meats', name: 'Meats', subcategories: ['Beef', 'Chicken', 'Lamb'] },
-    { id: 'canned', name: 'Canned Food', subcategories: ['Vegetables', 'Fruits', 'Meats'] },
-    { id: 'produce', name: 'Fruits & Vegetables', subcategories: ['Fruits', 'Vegetables', 'Organic'] },
-    { id: 'other', name: 'Other Items', subcategories: ['Spices', 'Grains', 'Dairy'] },
-  ]);
-  
+  // State initialization
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -20,9 +16,72 @@ const AddProduct = () => {
     imagePreviews: []
   });
   
-  const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      console.log('Fetching categories from:', `${API_BASE}/api/categories`);
+      
+      const response = await fetch(`${API_BASE}/api/categories`);
+      
+      // Log response status and headers
+      console.log('Response status:', response.status);
+      console.log('Response headers:', [...response.headers.entries()]);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategories([]); // Reset to empty array on error
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
   
+  fetchCategories();
+}, []);
+
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    if (formData.category) {
+      const fetchSubcategories = async () => {
+        try {
+          setSubcategoriesLoading(true);
+          const response = await fetch(`${API_BASE}/api/subcategories?category=${formData.category}`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          setSubcategories(data || []);
+        } catch (error) {
+          console.error('Error fetching subcategories:', error);
+        } finally {
+          setSubcategoriesLoading(false);
+        }
+      };
+      
+      fetchSubcategories();
+    } else {
+      setSubcategories([]);
+    }
+  }, [formData.category]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -33,53 +92,26 @@ const AddProduct = () => {
     
     if (files.length > 0) {
       const newPreviews = [];
+      const newImages = [];
       
       files.forEach(file => {
+        newImages.push(file);
         const reader = new FileReader();
+        
         reader.onloadend = () => {
           newPreviews.push(reader.result);
           
-          // When all files are processed
           if (newPreviews.length === files.length) {
             setFormData(prev => ({
               ...prev,
-              images: files,
+              images: [...prev.images, ...newImages],
               imagePreviews: [...prev.imagePreviews, ...newPreviews]
             }));
           }
         };
+        
         reader.readAsDataURL(file);
       });
-    }
-  };
-  
-  const handleAddCategory = () => {
-    const newCategory = prompt('Enter new category name:');
-    if (newCategory) {
-      setCategories(prev => [
-        ...prev,
-        { id: newCategory.toLowerCase().replace(/\s/g, '-'), name: newCategory, subcategories: [] }
-      ]);
-    }
-  };
-  
-  const handleAddSubcategory = () => {
-    if (!formData.category) {
-      alert('Please select a category first');
-      return;
-    }
-    
-    const newSubcategory = prompt('Enter new subcategory name:');
-    if (newSubcategory) {
-      setCategories(prev => prev.map(cat => {
-        if (cat.id === formData.category) {
-          return {
-            ...cat,
-            subcategories: [...cat.subcategories, newSubcategory]
-          };
-        }
-        return cat;
-      }));
     }
   };
   
@@ -97,37 +129,131 @@ const AddProduct = () => {
     }));
   };
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
+  // Create a new category
+  const createCategory = async () => {
+    if (!newCategoryName.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
     
-    // In a real app, this would upload images to Cloudinary
-    // and send the product data to your MongoDB database
-    console.log('Product data:', formData);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setSuccess(true);
-      setSubmitting(false);
-      
-      // Reset form
-      setFormData({
-        name: '',
-        category: '',
-        subcategory: '',
-        summary: '',
-        weight: '',
-        price: '',
-        images: [],
-        imagePreviews: []
+    try {
+      const response = await fetch(`${API_BASE}/api/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: newCategoryName })
       });
       
-      // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1500);
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(prev => [...prev, data]);
+        setFormData(prev => ({ ...prev, category: data._id }));
+        setNewCategoryName('');
+        setShowCategoryModal(false);
+        alert('Category created successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create category: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating category:', error);
+      alert('Network error. Please try again.');
+    }
   };
   
-  const selectedCategory = categories.find(cat => cat.id === formData.category);
+  // Create a new subcategory
+  const createSubcategory = async () => {
+    if (!newSubcategoryName.trim()) {
+      alert('Please enter a subcategory name');
+      return;
+    }
+    
+    if (!formData.category) {
+      alert('Please select a category first');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/subcategories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          name: newSubcategoryName, 
+          category: formData.category 
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSubcategories(prev => [...prev, data]);
+        setFormData(prev => ({ ...prev, subcategory: data._id }));
+        setNewSubcategoryName('');
+        setShowSubcategoryModal(false);
+        alert('Subcategory created successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create subcategory: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating subcategory:', error);
+      alert('Network error. Please try again.');
+    }
+  };
+  
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('description', formData.summary);
+    formDataToSend.append('price', formData.price);
+    formDataToSend.append('category', formData.category);
+    formDataToSend.append('subcategory', formData.subcategory);
+    formDataToSend.append('weight', formData.weight);
+    
+    // Append each image
+    formData.images.forEach(image => {
+      formDataToSend.append('images', image);
+    });
+    
+    const response = await fetch(`${API_BASE}/api/products`, {
+      method: 'POST',
+      body: formDataToSend
+    });
+      
+      if (response.ok) {
+        setSuccess(true);
+        // Reset form
+        setFormData({
+          name: '',
+          category: '',
+          subcategory: '',
+          summary: '',
+          weight: '',
+          price: '',
+          images: [],
+          imagePreviews: []
+        });
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        alert(`Failed to create product: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Network Error:', error);
+      alert('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <div className="add-product">
@@ -156,54 +282,66 @@ const AddProduct = () => {
           <div className="form-group">
             <label>Category</label>
             <div className="select-container">
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              <button 
-                type="button" 
-                onClick={handleAddCategory}
-                className="add-btn"
-              >
-                +
-              </button>
+              {categoriesLoading ? (
+                <p>Loading categories...</p>
+              ) : (
+                <>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(category => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCategoryModal(true)}
+                    className="add-btn"
+                  >
+                    +
+                  </button>
+                </>
+              )}
             </div>
           </div>
           
           <div className="form-group">
             <label>Subcategory</label>
             <div className="select-container">
-              <select
-                name="subcategory"
-                value={formData.subcategory}
-                onChange={handleChange}
-                required
-                disabled={!formData.category}
-              >
-                <option value="">Select a subcategory</option>
-                {selectedCategory && selectedCategory.subcategories.map((sub, index) => (
-                  <option key={index} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select>
-              <button 
-                type="button" 
-                onClick={handleAddSubcategory}
-                className="add-btn"
-                disabled={!formData.category}
-              >
-                +
-              </button>
+              {subcategoriesLoading ? (
+                <p>Loading subcategories...</p>
+              ) : (
+                <>
+                  <select
+                    name="subcategory"
+                    value={formData.subcategory}
+                    onChange={handleChange}
+                    required
+                    disabled={!formData.category || subcategories.length === 0}
+                  >
+                    <option value="">Select a subcategory</option>
+                    {subcategories.map(sub => (
+                      <option key={sub._id} value={sub._id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowSubcategoryModal(true)}
+                    className="add-btn"
+                    disabled={!formData.category}
+                  >
+                    +
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -287,11 +425,81 @@ const AddProduct = () => {
         <button 
           type="submit" 
           className="submit-btn"
-          disabled={submitting}
+          disabled={loading}
         >
-          {submitting ? 'Adding Product...' : 'Add Product'}
+          {loading ? 'Adding Product...' : 'Add Product'}
         </button>
       </form>
+
+      {/* Category Creation Modal */}
+      {showCategoryModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Create New Category</h3>
+            <div className="form-group">
+              <label>Category Name</label>
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Enter category name"
+                autoFocus
+              />
+            </div>
+            <div className="modal-buttons">
+              <button 
+                type="button" 
+                onClick={createCategory}
+                className="submit-btn"
+              >
+                Create
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowCategoryModal(false)}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subcategory Creation Modal */}
+      {showSubcategoryModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Create New Subcategory</h3>
+            <div className="form-group">
+              <label>Subcategory Name</label>
+              <input
+                type="text"
+                value={newSubcategoryName}
+                onChange={(e) => setNewSubcategoryName(e.target.value)}
+                placeholder="Enter subcategory name"
+                autoFocus
+              />
+            </div>
+            <div className="modal-buttons">
+              <button 
+                type="button" 
+                onClick={createSubcategory}
+                className="submit-btn"
+              >
+                Create
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowSubcategoryModal(false)}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import AddProduct from './pages/admin/AddProduct';
 import ProductList from './pages/admin/ProductList';
 import './App.css';
 import './pages/pages.css';
+import ProductDetail from './pages/ProductDetail';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAdmin();
@@ -48,6 +49,7 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/product/:id" element={<ProductDetail />} /> 
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/contact" element={<Contact />} />

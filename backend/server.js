@@ -1,46 +1,53 @@
+require('dotenv').config({debug: true});
 const express = require('express');
-const connectdb = require('./database/connectdb');
-const app = express()
-const productRoute = require('./routes/productRoute')
-const categoryRoute = require('./routes/categoryRoute')
-const subcategoryRoute = require('./routes/subcategoryRoute')
-const jwt = require("jsonwebtoken")
-const bcrypt = require('bcryptjs')
-const session = require('express-session');
-const bodyParser = require('body-parser');
-const isauth = require('./routes/authRoute')
-const isAuthenticated = require('./middleware/session')
-// At the top of your file
-require('dotenv').config();
+const cors = require('cors');
+const connectDB = require('./config/db');
 
-app.use(express.urlencoded({extended:true}));
-app.use(express.json());
-app.use(express.static('public'))
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false
+const app = express();
+
+// Connect to database
+connectDB();
+
+// Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
-app.use('/api/product',productRoute)
-app.use('/api/categories',categoryRoute)
-app.use('/api/subcategory',subcategoryRoute)
 
+// Test route - add BEFORE other routes
+app.get('/api/test', (req, res) => {
+  console.log('Test route hit!');
+  res.json({ 
+    message: 'Backend is working!', 
+    timestamp: new Date(),
+    env: {
+      port: process.env.PORT,
+      node_env: process.env.NODE_ENV
+    }
+  });
+});
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+// Routes
+app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/subcategories', require('./routes/subcategoryRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
 
-app.get('/dashboard', isAuthenticated, (req, res) => {
-  res.send('Welcome to the dashboard');
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err.stack);
+  res.status(500).json({ message: 'Server error', error: err.message });
 });
 
-
-
-const PORT = process.env.PORT || 6000;
-const startServer = async()=>{
-    try{
-        await connectdb(process.env.MONGO_URI)
-        app.listen(PORT,()=>{
-            console.log(`the Server is running in http://localhost:${PORT}`)
-        })
-    }catch(error){
-        console.log(error)
-    }
-}
-startServer()
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`MongoDB URI: ${process.env.MONGODB_URI ? 'Set' : 'Missing'}`);
+});
