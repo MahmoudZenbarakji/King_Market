@@ -58,18 +58,20 @@ app.use('/api/subcategories', require('./routes/subcategoryRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 
 // Serve static frontend in production
+// In the production static file section:
 if (process.env.NODE_ENV === 'production') {
   const __dirname = path.resolve();
-  const frontendPath = path.join(__dirname, 'frontend', 'dist');
+  // Use relative path to frontend dist
+  const frontendPath = path.join(__dirname, '../frontend/dist');
+  
+  console.log('Serving static files from:', frontendPath);
   
   app.use(express.static(frontendPath));
   
-  // Handle client-side routing
   app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
   });
 }
-
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err.stack);

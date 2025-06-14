@@ -1,4 +1,11 @@
 # Environment files
+node_modules
+.git
+.backend/node_modules
+.frontend/node_modules
+*.md
+*.log
+.DS_Store
 .env
 .env.local
 .env.*.local
