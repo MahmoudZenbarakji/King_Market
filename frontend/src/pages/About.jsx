@@ -84,7 +84,7 @@ All our products are subject to strict supervision by Sharia Supervisory Committ
           <div ref={el => cardsRef.current[3] = el} className="value-card">
             <div className="card-icon">🎧</div>
             <h3> Customer service</h3>
-            <p>Customer service team available 24/7 to assist you with any inquiries.</p>
+            <p>Customer service team available to assist you with any inquiries.</p>
           </div>
         </div>
         
@@ -96,7 +96,7 @@ All our products are subject to strict supervision by Sharia Supervisory Committ
                 <strong>King Market</strong> was founded in 2025 with the goal of providing high-quality HALAL products to the Muslim community. We pride ourselves on becoming the go-to destination for anyone looking for guaranteed halal food from trusted sources.
 
             </p>
-            <p className="founder-name"> Wael Mankash</p>
+            <p className="founder-name"> The Owner</p>
           </div>
         </div>
       </div>

@@ -11,10 +11,10 @@ const ProductsBar = () => {
   const categoriesRef = useRef([]);
   const productsRef = useRef(null);
   
-
-const API_BASE = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : 'http://localhost:5000';
+  // Correct API_BASE configuration
+  const API_BASE = process.env.NODE_ENV === 'production' 
+    ? '/api' 
+    : 'http://localhost:5000';
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -24,42 +24,40 @@ const API_BASE = process.env.NODE_ENV === 'production'
   const [error, setError] = useState(null);
 
   // Fetch products and categories on component mount
-  
-    const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch categories
-      const categoriesResponse = await fetch(`/api/categories`);
-      if (!categoriesResponse.ok) {
-        const text = await categoriesResponse.text();
-        throw new Error(`Categories error (${categoriesResponse.status}): ${text}`);
-      }
-      const categoriesData = await categoriesResponse.json();
-      setCategories(categoriesData);
-      
-      // Fetch products
-      const productsResponse = await fetch(`/api/products`);
-      if (!productsResponse.ok) {
-        const text = await productsResponse.text();
-        throw new Error(`Products error (${productsResponse.status}): ${text}`);
-      }
-      const productsData = await productsResponse.json();
-      setAllProducts(productsData);
-      setProducts(productsData);
-      
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('Failed to load products. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch categories
+        const categoriesResponse = await fetch(`${API_BASE}/categories`);
+        if (!categoriesResponse.ok) {
+          const text = await categoriesResponse.text();
+          throw new Error(`Categories error (${categoriesResponse.status}): ${text}`);
+        }
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData);
+        
+        // Fetch products
+        const productsResponse = await fetch(`${API_BASE}/products`);
+        if (!productsResponse.ok) {
+          const text = await productsResponse.text();
+          throw new Error(`Products error (${productsResponse.status}): ${text}`);
+        }
+        const productsData = await productsResponse.json();
+        setAllProducts(productsData);
+        setProducts(productsData);
+        
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError('Failed to load products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchData();
     
     // Cleanup animation on unmount
     return () => {
@@ -85,9 +83,8 @@ const API_BASE = process.env.NODE_ENV === 'production'
   useEffect(() => {
     if (loading || !sectionRef.current) return;
     
-    // Initialize GSAP animations only if not already initialized
+    // Initialize GSAP animations
     if (categoriesRef.current.length > 0 && productsRef.current) {
-      // Category animations
       categoriesRef.current.forEach((el, index) => {
         gsap.fromTo(el, 
           { opacity: 0, y: 20 },
@@ -105,7 +102,6 @@ const API_BASE = process.env.NODE_ENV === 'production'
         );
       });
 
-      // Product grid animation
       gsap.fromTo(productsRef.current, 
         { opacity: 0, y: 30 },
         {
@@ -125,29 +121,6 @@ const API_BASE = process.env.NODE_ENV === 'production'
   const toggleCategory = (categoryId) => {
     setSelectedCategory(prev => prev === categoryId ? null : categoryId);
   };
-
-  // Add passive: true to event listeners to fix warnings
-  useEffect(() => {
-    const addPassiveListeners = () => {
-      const elements = document.querySelectorAll('.category-circle');
-      elements.forEach(el => {
-        el.addEventListener('touchstart', () => {}, { passive: true });
-        el.addEventListener('touchmove', () => {}, { passive: true });
-      });
-    };
-
-    if (!loading) {
-      addPassiveListeners();
-    }
-    
-    return () => {
-      const elements = document.querySelectorAll('.category-circle');
-      elements.forEach(el => {
-        el.removeEventListener('touchstart', () => {});
-        el.removeEventListener('touchmove', () => {});
-      });
-    };
-  }, [loading]);
 
   return (
     <section ref={sectionRef} className="products-section">

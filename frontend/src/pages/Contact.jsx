@@ -145,7 +145,8 @@ const Contact = () => {
             <div className="info-card">
               <div className="info-icon">⏰</div>
               <h3>Working Hours</h3>
-              <p>24 / 7</p>
+             <p>Monday - Saturday: 9AM - 8PM</p>
+            <p>Sunday: Closed</p>
             </div>
             
             <div className="map-container">

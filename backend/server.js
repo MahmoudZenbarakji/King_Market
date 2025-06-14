@@ -4,7 +4,6 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
 
-
 const app = express();
 
 // Connect to database
@@ -12,28 +11,36 @@ connectDB();
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://king-market-qhz7.vercel.app',
+  'https://king-market.vercel.app'
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://king-market-qhz7.vercel.app', 'https://king-market.vercel.app'] 
-    : 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/dist', 'dist', 'index.html'));
-  });
-}
-
-
-// Test route - add BEFORE other routes
+// Test route
 app.get('/api/test', (req, res) => {
-  console.log('Test route hit!');
   res.json({ 
     message: 'Backend is working!', 
     timestamp: new Date(),
@@ -43,20 +50,17 @@ app.get('/api/test', (req, res) => {
     }
   });
 });
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-// Routes
+
+// API Routes
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/subcategories', require('./routes/subcategoryRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 
 // Serve static frontend in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  const frontendPath = path.join(__dirname, 'public');
+  const __dirname = path.resolve();
+  const frontendPath = path.join(__dirname, 'frontend', 'dist');
+  
   app.use(express.static(frontendPath));
   
   // Handle client-side routing
@@ -64,6 +68,7 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(frontendPath, 'index.html'));
   });
 }
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err.stack);
