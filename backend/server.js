@@ -1,4 +1,4 @@
-require('dotenv').config({debug: true});
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -17,7 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   'http://localhost:5173',
   'https://king-market-qhz7.vercel.app',
-  'https://king-market.vercel.app'
+  'https://king-market.vercel.app',
+  'https://thekingmarket.net'
 ];
 
 app.use(cors({

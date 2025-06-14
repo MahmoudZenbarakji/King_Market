@@ -6,7 +6,7 @@ module.exports = (req, res) => {
   
   // Proxy to backend API
   if (req.url.startsWith('/api')) {
-    target = 'https://king-market.onrender.com'; // Your backend URL
+    target = 'https://thekingmarket.net'; // Your backend URL
   }
   
   createProxyMiddleware({

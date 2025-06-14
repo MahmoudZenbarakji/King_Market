@@ -13,8 +13,8 @@ const ProductsBar = () => {
   
   // Correct API_BASE configuration
   const API_BASE = process.env.NODE_ENV === 'production' 
-    ? '/api' 
-    : 'http://localhost:5000';
+    ? 'https://thekingmarket.net/api' 
+    : 'http://localhost:5000/api';
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);
