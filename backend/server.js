@@ -24,7 +24,12 @@ app.use(session({
 app.use('/api/product',productRoute)
 app.use('/api/categories',categoryRoute)
 app.use('/api/subcategory',subcategoryRoute)
-
+app.use(cors({
+  origin: '*',  // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  // credentials: true  // Remove or comment out this line
+}));
 
 app.get('/dashboard', isAuthenticated, (req, res) => {
   res.send('Welcome to the dashboard');
